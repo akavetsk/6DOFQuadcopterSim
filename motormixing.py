@@ -56,10 +56,6 @@ def motor_speeds_from_wrench(thrust_cmd, roll_cmd, pitch_cmd, yaw_cmd, params):
     f = np.linalg.solve(M, wrench)
  
     if np.any(f < 0):
-        # A motor can't produce negative thrust. This means the requested
-        # wrench is infeasible for this vehicle (too much torque relative
-        # to available thrust). Clipping here is a simple saturation model;
-        # real allocation would prioritize attitude over throttle.
         f = np.clip(f, 0.0, None)
  
     omega = np.sqrt(f / params.kf)
