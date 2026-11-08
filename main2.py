@@ -15,12 +15,7 @@ params = QuadParams()
 # --- Attitude controller setup (inner loop) ---
 # Gains per axis [roll, pitch, yaw]. Roll/pitch share inertia (0.015),
 # yaw has higher inertia (0.028) and typically wants softer gains.
-#
-# Cascaded control requires the inner (attitude) loop to be meaningfully
-# faster than the outer (position) loop -- otherwise the outer loop's
-# assumption that attitude tracks "instantly" breaks down and the two
-# loops couple into an oscillation. Tuned here for ~5x separation from
-# the position loop's natural frequency (see position gains below).
+
 Kp_att = np.array([1.5, 1.5, 1.0])
 Kd_att = np.array([0.35, 0.35, 0.30])
 
@@ -87,8 +82,6 @@ def step_dynamics(t, state, u, params, dt):
     )
     next_state = sol.y[:, -1]
 
-    # Re-normalize the quaternion. Small numerical drift accumulates over
-    # many steps and unit-norm is an assumption the rotation math relies on.
     quat = next_state[6:10]
     next_state[6:10] = quat / np.linalg.norm(quat)
 
@@ -101,10 +94,7 @@ state_log = np.zeros((n_steps + 1, x0.size))   # [pos, vel, quat, omega]
 u_log = np.zeros((n_steps, 4))                  # [thrust, roll, pitch, yaw]
 
 # Define the simulation loop.
-# NOTE: `state` is the variable that actually advances each iteration.
-# `x0` is left untouched as a record of the initial condition -- reusing
-# x0 as the running state was the bug in the previous version (it froze
-# the sim at t=0 because step_dynamics' return value was never captured).
+
 state = x0.copy()
 t = t0
 time_log[0] = t0
